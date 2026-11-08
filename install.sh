@@ -8,6 +8,7 @@
 set -euo pipefail
 
 REPO="oski02/Voxly"
+API="${VOXLY_API:-https://api.github.com}"
 APP="Voxly.app"
 DEST="${INSTALL_DIR:-/Applications}"
 
@@ -21,15 +22,20 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 say "Buscando la última versión / Looking up the latest release..."
-JSON="$(curl -fsSL --retry 4 --retry-delay 2 --retry-all-errors "https://api.github.com/repos/$REPO/releases/latest")" || die "No se pudo consultar GitHub / Could not reach GitHub."
-url_of() { printf '%s' "$JSON" | grep -o "\"browser_download_url\": *\"[^\"]*$1\"" | head -1 | sed 's/.*: *"\(.*\)"/\1/'; }
-ZIP_URL="$(url_of '\.zip')"
-SUM_URL="$(url_of 'SHA256\.txt')"
-[ -n "$ZIP_URL" ] && [ -n "$SUM_URL" ] || die "La release no contiene el zip o el SHA256.txt / Release is missing the zip or SHA256.txt."
+JSON="$(curl -fsSL --retry 4 --retry-delay 2 --retry-all-errors "$API/repos/$REPO/releases/latest")" || die "No se pudo consultar GitHub / Could not reach GitHub."
+FLAT="$(printf '%s' "$JSON" | tr -d ' \n')"
+# Id del asset por nombre (regex) / Asset id by name (regex)
+asset_id() { printf '%s' "$FLAT" | grep -oE "releases/assets/[0-9]+\",\"id\":[0-9]+,\"node_id\":\"[^\"]*\",\"name\":\"$1\"" | head -1 | sed -E 's#releases/assets/([0-9]+)".*#\1#'; }
+ZIP_ID="$(asset_id '[^"]*\.zip')"
+SUM_ID="$(asset_id 'SHA256\.txt')"
+[ -n "$ZIP_ID" ] && [ -n "$SUM_ID" ] || die "La release no contiene el zip o el SHA256.txt / Release is missing the zip or SHA256.txt."
 
-say "Descargando / Downloading $(basename "$ZIP_URL")..."
-curl -fsSL --retry 4 --retry-delay 2 --retry-all-errors -o "$TMP/app.zip" "$ZIP_URL"
-curl -fsSL --retry 4 --retry-delay 2 --retry-all-errors -o "$TMP/SHA256.txt" "$SUM_URL"
+# Descarga por la API (más fiable que github.com/.../download) / Download via the API
+fetch() { curl -fsSL --retry 4 --retry-delay 2 --retry-all-errors -H "Accept: application/octet-stream" -o "$2" "$API/repos/$REPO/releases/assets/$1"; }
+
+say "Descargando / Downloading Voxly..."
+fetch "$ZIP_ID" "$TMP/app.zip" || die "No se pudo descargar el zip / Could not download the zip."
+fetch "$SUM_ID" "$TMP/SHA256.txt" || die "No se pudo descargar SHA256.txt / Could not download SHA256.txt."
 
 say "Verificando integridad / Verifying checksum..."
 EXPECTED="$(awk '{print $1}' "$TMP/SHA256.txt" | head -1)"
