@@ -268,7 +268,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .font: NSFont.systemFont(ofSize: 12), .paragraphStyle: style,
             .foregroundColor: NSColor.labelColor])
         NSApp.orderFrontStandardAboutPanel(options: [
-            .applicationName: "Voxly", .applicationVersion: "1.1", .version: "",
+            .applicationName: "Voxly", .applicationVersion: "1.0", .version: "",
             .credits: credits,
             NSApplication.AboutPanelOptionKey(rawValue: "Copyright"): "© x25s"])
     }
