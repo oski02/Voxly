@@ -62,8 +62,13 @@ ditto "$TMP/out/$APP" "$DEST/$APP"
 xattr -dr com.apple.quarantine "$DEST/$APP" 2>/dev/null || true
 
 say "Listo / Done: $DEST/$APP"
-[ -z "${NO_OPEN:-}" ] && open "$DEST/$APP"
+if [ -z "${NO_OPEN:-}" ]; then
+  open "$DEST/$APP"
+  # Abre el panel de Accesibilidad para activar Voxly / Opens the Accessibility pane to enable Voxly
+  sleep 2
+  open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility" 2>/dev/null || true
+fi
 printf '\n\033[32m✅ Instalado correctamente. Mantén pulsada FN para hablar.\033[0m\n'
 printf '\033[32m   Installed successfully. Hold FN to speak.\033[0m\n\n'
-echo "Antes, concede Micrófono, Reconocimiento de voz y Accesibilidad cuando se pida."
-echo "First, grant Microphone, Speech Recognition and Accessibility when prompted."
+echo "Falta un paso: activa Voxly en Accesibilidad (se ha abierto el panel) y acepta Micrófono y Reconocimiento de voz."
+echo "One step left: enable Voxly in Accessibility (the pane was opened) and allow Microphone and Speech Recognition."

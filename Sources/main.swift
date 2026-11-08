@@ -268,7 +268,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .font: NSFont.systemFont(ofSize: 12), .paragraphStyle: style,
             .foregroundColor: NSColor.labelColor])
         NSApp.orderFrontStandardAboutPanel(options: [
-            .applicationName: "Voxly", .applicationVersion: "1.0", .version: "",
+            .applicationName: "Voxly", .applicationVersion: "1.1", .version: "",
             .credits: credits,
             NSApplication.AboutPanelOptionKey(rawValue: "Copyright"): "© x25s"])
     }
@@ -282,8 +282,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func requestPermissions() {
         SFSpeechRecognizer.requestAuthorization { _ in }
         AVCaptureDevice.requestAccess(for: .audio) { _ in }
-        let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        _ = AXIsProcessTrustedWithOptions(opts)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in self?.checkAccessibility() }
+    }
+
+    var axAlertShown = false, imAlertShown = false, tapFailures = 0
+
+    /// Aviso claro con botón directo al ajuste, solo una vez por arranque.
+    func permissionAlert(title: String, text: String, pane: String) {
+        NSApp.activate(ignoringOtherApps: true)
+        let a = NSAlert()
+        a.messageText = title; a.informativeText = text
+        a.alertStyle = .informational
+        a.addButton(withTitle: "Abrir Ajustes")
+        a.addButton(withTitle: "Más tarde")
+        if let icon = NSApp.applicationIconImage { a.icon = icon }
+        if a.runModal() == .alertFirstButtonReturn { openSettings(pane) }
+    }
+
+    func checkAccessibility() {
+        guard !AXIsProcessTrusted(), !axAlertShown else { return }
+        axAlertShown = true
+        permissionAlert(title: "Voxly necesita el permiso de Accesibilidad",
+                        text: "Sirve para detectar la tecla FN y escribir el texto donde tengas el cursor.\n\nPulsa «Abrir Ajustes» y activa el interruptor de Voxly. Si ya aparece activado, quítalo con «–» y vuelve a añadirlo con «+».",
+                        pane: "Privacy_Accessibility")
     }
 
     func openSettings(_ pane: String) {
@@ -315,7 +336,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if self.tap != nil { return }
         guard let tap = created else {
             // Aún sin permisos: reintentar hasta que se concedan
-            if AXIsProcessTrusted() && !CGPreflightListenEventAccess() { CGRequestListenEventAccess() }
+            if AXIsProcessTrusted() && !CGPreflightListenEventAccess() {
+                CGRequestListenEventAccess()
+                tapFailures += 1
+                if tapFailures >= 3 && !imAlertShown {
+                    imAlertShown = true
+                    permissionAlert(title: "Voxly necesita Monitorización de entrada",
+                                    text: "Tu versión de macOS exige también este permiso para detectar la tecla FN.\n\nPulsa «Abrir Ajustes» y activa el interruptor de Voxly.",
+                                    pane: "Privacy_ListenEvent")
+                }
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self.installEventTap(); self.buildMenu() }
             return
         }
