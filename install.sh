@@ -46,9 +46,11 @@ say "Extrayendo / Extracting..."
 ditto -x -k "$TMP/app.zip" "$TMP/out"
 [ -d "$TMP/out/$APP" ] || die "No se encontró $APP en el zip / $APP not found in the zip."
 
-if pgrep -x Voxly >/dev/null 2>&1; then
+# Solo cierra la Voxly que se va a reemplazar (la de $DEST) / Only quits the copy being replaced
+BIN="$DEST/$APP/Contents/MacOS/Voxly"
+if pgrep -f "$BIN" >/dev/null 2>&1; then
   say "Cerrando Voxly en ejecución / Quitting running Voxly..."
-  osascript -e 'tell application "Voxly" to quit' >/dev/null 2>&1 || pkill -x Voxly || true
+  pkill -f "$BIN" || true
   sleep 1
 fi
 
@@ -60,8 +62,8 @@ ditto "$TMP/out/$APP" "$DEST/$APP"
 xattr -dr com.apple.quarantine "$DEST/$APP" 2>/dev/null || true
 
 say "Listo / Done: $DEST/$APP"
-if [ -z "${NO_OPEN:-}" ]; then
-  open "$DEST/$APP"
-  echo "Concede Micrófono, Reconocimiento de voz y Accesibilidad cuando se pida."
-  echo "Grant Microphone, Speech Recognition and Accessibility when prompted."
-fi
+[ -z "${NO_OPEN:-}" ] && open "$DEST/$APP"
+printf '\n\033[32m✅ Instalado correctamente. Mantén pulsada FN para hablar.\033[0m\n'
+printf '\033[32m   Installed successfully. Hold FN to speak.\033[0m\n\n'
+echo "Antes, concede Micrófono, Reconocimiento de voz y Accesibilidad cuando se pida."
+echo "First, grant Microphone, Speech Recognition and Accessibility when prompted."
