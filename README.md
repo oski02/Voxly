@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/banner.png" alt="Voxly: mantén FN, habla y suelta / hold FN, speak, release" width="100%">
+</p>
+
 # Voxly
 
 **Mantén FN, habla, suelta: tu voz se escribe donde tengas el cursor.**
