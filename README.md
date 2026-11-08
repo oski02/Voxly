@@ -26,10 +26,23 @@ Voxly es una pequeña app de barra de menús para macOS que convierte tu voz en 
 - macOS 13 o superior.
 - Xcode Command Line Tools (`xcode-select --install`) para compilar.
 
-### Compilar e instalar
+### Instalar
+**Opción 1: instalador (recomendada).** Descarga la última versión, verifica su SHA-256, la copia a `/Applications` y la abre. Al no pasar por el navegador, no salta el aviso de macOS:
+```bash
+curl -fsSL https://raw.githubusercontent.com/oski02/Voxly/main/install.sh | bash
+```
+Puedes leer el script antes de ejecutarlo: [`install.sh`](install.sh).
+
+**Opción 2: descarga manual.** Baja `Voxly-1.0-macOS.zip` desde [Releases](https://github.com/oski02/Voxly/releases), descomprímelo y mueve `Voxly.app` a `/Applications`. La primera vez macOS dirá que *no ha podido verificar que Voxly no contenga software malicioso*, porque la app no está notarizada por Apple. Para abrirla:
+1. Intenta abrirla y pulsa **Aceptar**.
+2. Ve a **Ajustes del Sistema → Privacidad y seguridad**, baja a *Seguridad* y pulsa **Abrir de todos modos**.
+
+   O bien, en la Terminal: `xattr -dr com.apple.quarantine /Applications/Voxly.app`
+
+**Opción 3: compilar desde el código** (una app compilada en tu Mac no recibe el aviso):
 ```bash
 git clone https://github.com/oski02/Voxly.git
-cd voxly
+cd Voxly
 ./build.sh
 cp -R build/Voxly.app /Applications/
 open /Applications/Voxly.app
@@ -68,10 +81,23 @@ Voxly is a small macOS menu-bar app that turns your voice into text in any appli
 - macOS 13 or later.
 - Xcode Command Line Tools (`xcode-select --install`) to build.
 
-### Build and install
+### Install
+**Option 1: installer (recommended).** Downloads the latest release, verifies its SHA-256, copies it to `/Applications` and opens it. Since it doesn't go through a browser, the macOS warning doesn't appear:
+```bash
+curl -fsSL https://raw.githubusercontent.com/oski02/Voxly/main/install.sh | bash
+```
+You can read the script before running it: [`install.sh`](install.sh).
+
+**Option 2: manual download.** Get `Voxly-1.0-macOS.zip` from [Releases](https://github.com/oski02/Voxly/releases), unzip it and move `Voxly.app` to `/Applications`. The first time, macOS will say it *could not verify that Voxly is free of malware*, because the app is not notarized by Apple. To open it:
+1. Try to open it and click **Done**.
+2. Go to **System Settings → Privacy & Security**, scroll to *Security* and click **Open Anyway**.
+
+   Or, in Terminal: `xattr -dr com.apple.quarantine /Applications/Voxly.app`
+
+**Option 3: build from source** (an app built on your own Mac doesn't get the warning):
 ```bash
 git clone https://github.com/oski02/Voxly.git
-cd voxly
+cd Voxly
 ./build.sh
 cp -R build/Voxly.app /Applications/
 open /Applications/Voxly.app
